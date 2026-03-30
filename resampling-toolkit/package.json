@@ -1,0 +1,14 @@
+{
+  "name": "resampling-stat-toolkit",
+  "version": "1.0.0",
+  "description": "Bootstrap and jackknife resampling utilities for confidence intervals and uncertainty estimates.",
+  "main": "index.js",
+  "keywords": [
+    "bootstrap",
+    "jackknife",
+    "statistics",
+    "resampling",
+    "confidence-interval"
+  ],
+  "license": "MIT"
+}
