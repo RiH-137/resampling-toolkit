@@ -9,7 +9,8 @@ const {
   computePercentileConfidenceInterval,
   computeLeaveOneOutEstimates,
   estimateBiasVariance,
-  computeStabilityAssessment
+  computeStabilityAssessment,
+  buildGraphModels
 } = require('resampling-stat-toolkit');
 
 const app = express();
@@ -60,7 +61,13 @@ app.post('/api/bootstrap', (req, res) => {
           lower: previewConfidenceInterval.lower,
           upper: previewConfidenceInterval.upper
         }
-      }
+      },
+      graphModels: buildGraphModels(base.distribution, {
+        histogramBins: 16,
+        sparkWidth: 480,
+        sparkHeight: 120,
+        sparkPadding: 8
+      })
     };
 
     res.json(response);
@@ -103,7 +110,13 @@ app.post('/api/jackknife', (req, res) => {
       },
       leaveOneOutPreview: leaveOneOutEstimates.slice(0, 10),
       biasVariancePreview: biasVariance,
-      stability
+      stability,
+      graphModels: buildGraphModels(base.leaveOneOutEstimates, {
+        histogramBins: 16,
+        sparkWidth: 480,
+        sparkHeight: 120,
+        sparkPadding: 8
+      })
     };
 
     res.json(response);

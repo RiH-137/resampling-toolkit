@@ -22,6 +22,13 @@ const {
   quantile
 } = require('./src/stats');
 
+const {
+  getMinMax,
+  buildHistogram,
+  buildSparkPath,
+  buildGraphModels
+} = require('./src/visualization');
+
 module.exports = {
   SUPPORTED_STATISTICS,
   validateResamplingInput,
@@ -39,6 +46,10 @@ module.exports = {
   variance,
   standardDeviation,
   quantile,
+  getMinMax,
+  buildHistogram,
+  buildSparkPath,
+  buildGraphModels,
   bootstrap,
   jackknife
 };

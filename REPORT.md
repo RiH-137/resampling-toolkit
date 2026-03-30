@@ -45,10 +45,11 @@ All requested goals are implemented across toolkit, backend, and frontend:
 17. Manual dataset input and CSV parsing/upload are implemented.
 18. Histogram and sparkline charts are implemented.
 19. Real-time render updates are shown after API responses.
+20. Graph-generation code is centralized in resampling-toolkit and imported by frontend/backend.
 
-20. Ensure Accuracy and Performance
-21. Core algorithms use array preallocation and deterministic validation paths.
-22. Stable output fields and explicit confidence interval computation are implemented.
+21. Ensure Accuracy and Performance
+22. Core algorithms use array preallocation and deterministic validation paths.
+23. Stable output fields and explicit confidence interval computation are implemented.
 
 
 ## 2. Repository Layout
@@ -251,12 +252,20 @@ index.js
 7. computePercentileConfidenceInterval
 8. computeStabilityAssessment
 9. buildPerformance
-10. mean, variance, standardDeviation, quantile and other stats helpers
+10. buildHistogram, buildSparkPath, buildGraphModels
+11. mean, variance, standardDeviation, quantile and other stats helpers
 
 src/resampling.js
 
 1. Same computational core as backend example logic.
 2. Includes bootstrap/jackknife execution pipelines.
+
+src/visualization.js
+
+1. Contains graph helper builders.
+2. Generates histogram bins from numeric distributions.
+3. Generates sparkline SVG paths from estimate sequences.
+4. Exposes combined graph model generation for backend/frontend reuse.
 
 src/stats.js
 

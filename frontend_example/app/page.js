@@ -1,6 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import toolkit from 'resampling-stat-toolkit';
+
+const {
+  mean,
+  median,
+  variance,
+  standardDeviation,
+  statisticFn,
+  validateResamplingInput,
+  computeLeaveOneOutEstimates,
+  estimateBiasVariance,
+  computeStabilityAssessment,
+  buildHistogram,
+  buildSparkPath
+} = toolkit;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -95,70 +110,6 @@ function parseDataset(rawValue) {
 
 function formatNumber(value) {
   return Number(value).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-}
-
-function getMinMax(values) {
-  if (!values.length) {
-    return { min: 0, max: 0 };
-  }
-
-  let min = values[0];
-  let max = values[0];
-  for (const value of values) {
-    if (value < min) min = value;
-    if (value > max) max = value;
-  }
-
-  return { min, max };
-}
-
-function buildHistogram(values, binCount = 16) {
-  if (!values.length) {
-    return [];
-  }
-
-  const { min, max } = getMinMax(values);
-  if (min === max) {
-    return [{ start: min, end: max, count: values.length }];
-  }
-
-  const bins = Array.from({ length: binCount }, () => ({ count: 0 }));
-  const width = (max - min) / binCount;
-
-  for (const value of values) {
-    const normalized = (value - min) / width;
-    const index = Math.min(binCount - 1, Math.floor(normalized));
-    bins[index].count += 1;
-  }
-
-  return bins.map((bin, index) => ({
-    start: min + width * index,
-    end: min + width * (index + 1),
-    count: bin.count
-  }));
-}
-
-function buildSparkPath(values, width, height, padding) {
-  if (!values.length) {
-    return '';
-  }
-
-  if (values.length === 1) {
-    return `M ${padding} ${height / 2} L ${width - padding} ${height / 2}`;
-  }
-
-  const { min, max } = getMinMax(values);
-  const ySpan = max - min || 1;
-  const xSpan = width - padding * 2;
-  const ySize = height - padding * 2;
-
-  return values
-    .map((value, index) => {
-      const x = padding + (index / (values.length - 1)) * xSpan;
-      const y = padding + (1 - (value - min) / ySpan) * ySize;
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    })
-    .join(' ');
 }
 
 function ResultLine({ label, value }) {
@@ -314,6 +265,51 @@ export default function Page() {
 
     return crossesZero ? 'red' : 'green';
   }, [result]);
+
+  const toolkitInputStats = useMemo(() => {
+    try {
+      const values = parseDataset(datasetText);
+      const stat = statisticFn(statistic);
+      const validation = validateResamplingInput({
+        data: values,
+        statistic,
+        confidenceLevel: Number(confidenceLevel),
+        iterations: mode === 'bootstrap' ? Number(iterations) : undefined,
+        requireIterations: mode === 'bootstrap'
+      });
+
+      const baseStats = {
+        mean: mean(values),
+        median: median(values),
+        variance: variance(values),
+        standardDeviation: standardDeviation(values)
+      };
+
+      const originalEstimate = stat(values);
+      const leaveOneOutEstimates = computeLeaveOneOutEstimates(values, stat);
+      const biasVariance = estimateBiasVariance(leaveOneOutEstimates, originalEstimate);
+      const confidenceInterval = {
+        lower: biasVariance.biasCorrectedEstimate - 1.96 * biasVariance.standardError,
+        upper: biasVariance.biasCorrectedEstimate + 1.96 * biasVariance.standardError
+      };
+      const stability = computeStabilityAssessment({
+        estimate: originalEstimate,
+        standardError: biasVariance.standardError,
+        confidenceInterval
+      });
+
+      return {
+        validation,
+        baseStats,
+        leaveOneOutCount: leaveOneOutEstimates.length,
+        ...biasVariance,
+        confidenceInterval,
+        stability
+      };
+    } catch {
+      return null;
+    }
+  }, [datasetText, statistic, confidenceLevel, iterations, mode]);
 
   async function runMethod(event) {
     event.preventDefault();
@@ -600,8 +596,17 @@ export default function Page() {
                   {typeof result.bootstrapStdError === 'number' ? (
                     <ResultLine label="Bootstrap Std. Error" value={formatNumber(result.bootstrapStdError)} />
                   ) : null}
+                  {typeof result.bootstrapMean === 'number' ? (
+                    <ResultLine label="Bootstrap Mean" value={formatNumber(result.bootstrapMean)} />
+                  ) : null}
                   {typeof result.standardError === 'number' ? (
                     <ResultLine label="Jackknife Std. Error" value={formatNumber(result.standardError)} />
+                  ) : null}
+                  {typeof result.jackknifeMean === 'number' ? (
+                    <ResultLine label="Jackknife Mean" value={formatNumber(result.jackknifeMean)} />
+                  ) : null}
+                  {typeof result.leaveOneOutCount === 'number' ? (
+                    <ResultLine label="Leave-one-out Count" value={String(result.leaveOneOutCount)} />
                   ) : null}
                   {typeof result.varianceEstimate === 'number' ? (
                     <ResultLine label="Jackknife Variance" value={formatNumber(result.varianceEstimate)} />
@@ -634,11 +639,29 @@ export default function Page() {
                       value={`${formatNumber(result.stability.score)} (${result.stability.level})`}
                     />
                   ) : null}
+                  {result.stability && typeof result.stability.relativeError === 'number' ? (
+                    <ResultLine
+                      label="Relative Error"
+                      value={formatNumber(result.stability.relativeError)}
+                    />
+                  ) : null}
+                  {result.stability && typeof result.stability.relativeCiWidth === 'number' ? (
+                    <ResultLine
+                      label="Relative CI Width"
+                      value={formatNumber(result.stability.relativeCiWidth)}
+                    />
+                  ) : null}
 
                   {result.performance ? (
                     <ResultLine
                       label="Compute Time (ms)"
                       value={String(result.performance.elapsedMs)}
+                    />
+                  ) : null}
+                  {result.performance?.algorithm ? (
+                    <ResultLine
+                      label="Algorithm"
+                      value={result.performance.algorithm}
                     />
                   ) : null}
 
@@ -655,6 +678,26 @@ export default function Page() {
                     <p className="mt-2 text-sm text-neutral-800">
                       {result.leaveOneOutEstimates.slice(0, 10).map((value) => formatNumber(value)).join(', ')}
                     </p>
+                  </div>
+                ) : null}
+
+                {toolkitInputStats ? (
+                  <div className="rounded-lg border border-neutral-300 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                      Toolkit Imported Stats (Local)
+                    </p>
+                    <div className="mt-2 space-y-1">
+                      <ResultLine label="Input Mean" value={formatNumber(toolkitInputStats.baseStats.mean)} />
+                      <ResultLine label="Input Median" value={formatNumber(toolkitInputStats.baseStats.median)} />
+                      <ResultLine label="Input Variance" value={formatNumber(toolkitInputStats.baseStats.variance)} />
+                      <ResultLine label="Input Std. Dev" value={formatNumber(toolkitInputStats.baseStats.standardDeviation)} />
+                      <ResultLine label="Input Leave-one-out Count" value={String(toolkitInputStats.leaveOneOutCount)} />
+                      <ResultLine label="Input Bias" value={formatNumber(toolkitInputStats.bias)} />
+                      <ResultLine label="Input Variance Estimate" value={formatNumber(toolkitInputStats.varianceEstimate)} />
+                      <ResultLine label="Input CI" value={`[${formatNumber(toolkitInputStats.confidenceInterval.lower)}, ${formatNumber(toolkitInputStats.confidenceInterval.upper)}]`} />
+                      <ResultLine label="Input Stability" value={`${formatNumber(toolkitInputStats.stability.score)} (${toolkitInputStats.stability.level})`} />
+                      <ResultLine label="Input Validation" value={toolkitInputStats.validation.isValid ? 'Passed' : 'Failed'} />
+                    </div>
                   </div>
                 ) : null}
 

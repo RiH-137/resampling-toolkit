@@ -6,6 +6,7 @@ It provides:
 - A Node.js + Express backend for bootstrap and jackknife computations
 - A Next.js + Tailwind frontend for interactive analysis
 - A reusable `resampling-toolkit` module with feature-level exports
+- Centralized graph builders (histogram/sparkline) in `resampling-toolkit`
 - CSV upload with column selection so calculations can be based on field names
 - Visual output (distribution graph and estimate trend) to make results easier to interpret
 
@@ -155,12 +156,16 @@ The toolkit supports explicit feature imports so each capability can be reused i
 			computePercentileConfidenceInterval,
 			computeStabilityAssessment,
 			buildPerformance,
+			buildHistogram,
+			buildSparkPath,
+			buildGraphModels,
 			mean,
 			variance,
 			standardDeviation
 		} = require('resampling-stat-toolkit');
 
-These are integrated in `backend_example/src/server.js` and surfaced to `frontend_example/app/page.js` via API responses.
+These are integrated in `backend_example/src/server.js` and `frontend_example/app/page.js`.
+All graph-generation logic is now maintained in `resampling-toolkit/src/visualization.js` and consumed through imports.
 
 
 ## Use resampling-toolkit Standalone (Without frontend/backend)

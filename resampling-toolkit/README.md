@@ -38,6 +38,9 @@ const {
   computePercentileConfidenceInterval,
   computeStabilityAssessment,
   buildPerformance,
+  buildHistogram,
+  buildSparkPath,
+  buildGraphModels,
   mean,
   variance,
   standardDeviation
@@ -45,6 +48,11 @@ const {
 ```
 
 These exports let you import and reuse each feature independently in your own Node.js projects.
+
+Visualization exports:
+- `buildHistogram(values, binCount)`
+- `buildSparkPath(values, width, height, padding)`
+- `buildGraphModels(values, options)`
 
 ## API
 
