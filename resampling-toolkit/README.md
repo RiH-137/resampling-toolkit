@@ -28,6 +28,24 @@ console.log(bootstrapResult.confidenceInterval);
 console.log(jackknifeResult.confidenceInterval);
 ```
 
+## Feature-Level Imports
+
+```javascript
+const {
+  validateResamplingInput,
+  computeLeaveOneOutEstimates,
+  estimateBiasVariance,
+  computePercentileConfidenceInterval,
+  computeStabilityAssessment,
+  buildPerformance,
+  mean,
+  variance,
+  standardDeviation
+} = require('resampling-stat-toolkit');
+```
+
+These exports let you import and reuse each feature independently in your own Node.js projects.
+
 ## API
 
 ### bootstrap(options)
@@ -40,6 +58,17 @@ console.log(jackknifeResult.confidenceInterval);
 - `options.data`: number[] (required, at least 2 values)
 - `options.statistic`: `mean | median | variance | std` (default: `mean`)
 - `options.confidenceLevel`: number between 0 and 1 (default: 0.95)
+
+Both `bootstrap` and `jackknife` return structured outputs with:
+- confidenceInterval
+- validation
+- stability
+- performance
+
+Additionally, `jackknife` returns:
+- leaveOneOutEstimates
+- bias
+- varianceEstimate
 
 ## License
 

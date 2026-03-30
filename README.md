@@ -5,6 +5,7 @@ This project is a practical resampling lab built for students, developers, and d
 It provides:
 - A Node.js + Express backend for bootstrap and jackknife computations
 - A Next.js + Tailwind frontend for interactive analysis
+- A reusable `resampling-toolkit` module with feature-level exports
 - CSV upload with column selection so calculations can be based on field names
 - Visual output (distribution graph and estimate trend) to make results easier to interpret
 
@@ -21,9 +22,9 @@ This toolkit turns those ideas into something runnable and easy to explore.
 ## Current Features
 
 - Supports statistics: mean, median, variance, standard deviation
-- Bootstrap endpoint with configurable iteration count and confidence level
-- Jackknife endpoint with bias and bias-corrected estimate
-- Confidence intervals returned by both methods
+- Bootstrap endpoint with configurable iteration count, distribution output, and confidence interval
+- Jackknife endpoint with leave-one-out estimates, bias, variance estimate, and confidence interval
+- Structured outputs for validation, stability, performance, and feature usage
 - CSV upload in frontend
 - Automatic numeric-column detection after upload
 - Manual column selector so users choose the field to analyze
@@ -31,6 +32,12 @@ This toolkit turns those ideas into something runnable and easy to explore.
 - Graphs:
 	- Histogram-style distribution graph
 	- Estimate sequence sparkline
+- Frontend panels for:
+	- Leave-one-out values preview
+	- Bias and variance display
+	- Confidence interval display
+	- Validation status
+	- Stability score and compute-time metrics
 
 
 ## Tech Stack
@@ -56,14 +63,14 @@ Backend
 					src/
 						resampling.js
 						stats.js
-				backend/
+				backend_example/
 					src/
 						server.js
 						resampling.js
 						stats.js
 					.env
 					package.json
-				frontend/
+				frontend_example/
 					app/
 						layout.js
 						page.js
@@ -124,6 +131,37 @@ Notes:
 - data must contain at least 2 numeric values
 - confidenceLevel must be between 0 and 1
 
+Response includes:
+- leaveOneOutEstimates
+- bias
+- varianceEstimate
+- standardError
+- confidenceInterval
+- validation
+- stability
+- performance
+
+
+## Toolkit Feature-Level Imports
+
+The toolkit supports explicit feature imports so each capability can be reused independently:
+
+		const {
+			bootstrap,
+			jackknife,
+			validateResamplingInput,
+			computeLeaveOneOutEstimates,
+			estimateBiasVariance,
+			computePercentileConfidenceInterval,
+			computeStabilityAssessment,
+			buildPerformance,
+			mean,
+			variance,
+			standardDeviation
+		} = require('resampling-stat-toolkit');
+
+These are integrated in `backend_example/src/server.js` and surfaced to `frontend_example/app/page.js` via API responses.
+
 
 ## Use resampling-toolkit Standalone (Without frontend/backend)
 
@@ -178,7 +216,7 @@ If you are new to this repo, do this in order.
 
 2. Start the backend server
 
-		cd project/backend
+		cd project/backend_example
 		npm install
 		npm run dev
 
@@ -188,7 +226,7 @@ Backend starts at:
 
 3. Open a second terminal and start the frontend
 
-		cd project/frontend
+		cd project/frontend_example
 		npm install
 		npm run dev
 
@@ -203,11 +241,11 @@ Frontend starts at:
 
 ## Environment Variables
 
-Backend file: project/backend/.env
+Backend file: project/backend_example/.env
 
 		PORT=5000
 
-Frontend file: project/frontend/.env.local
+Frontend file: project/frontend_example/.env.local
 
 		NEXT_PUBLIC_API_URL=http://localhost:5000/api
 

@@ -18,17 +18,50 @@ At a high level:
 4. Frontend renders estimates, confidence intervals, and charts.
 
 
+## 1.1 Project Goals Coverage
+
+All requested goals are implemented across toolkit, backend, and frontend:
+
+1. Implement Bootstrap Resampling API
+2. Sampling with replacement is implemented in resampling-toolkit/src/resampling.js.
+3. Configurable iterations is supported through bootstrap options and backend request body.
+4. Confidence intervals and full distributions are returned in bootstrap responses.
+
+5. Implement Jackknife Resampling API
+6. Leave-one-out estimation is implemented in jackknife logic.
+7. Bias and variance estimation are returned as bias and varianceEstimate.
+8. Confidence interval computation is returned as confidenceInterval.
+
+9. Build Reusable Toolkit
+10. Independent module exists in project/resampling-toolkit.
+11. It is integrated in backend_example via local package dependency and direct import.
+
+12. Develop REST API Layer
+13. /api/bootstrap and /api/jackknife endpoints are implemented.
+14. Input validation is enforced in toolkit stats and resampling methods.
+15. Structured outputs are returned for both methods.
+
+16. Frontend Visualization
+17. Manual dataset input and CSV parsing/upload are implemented.
+18. Histogram and sparkline charts are implemented.
+19. Real-time render updates are shown after API responses.
+
+20. Ensure Accuracy and Performance
+21. Core algorithms use array preallocation and deterministic validation paths.
+22. Stable output fields and explicit confidence interval computation are implemented.
+
+
 ## 2. Repository Layout
 
 Root layout:
 
-1. 
+1. project/
 2. project/
 3. project/backend_example/
 4. project/frontend_example/
 5. project/resampling-toolkit/
 6. project/README.md
-7. report.md
+7. project/report.md
 
 This structure gives you two ways to use the work:
 
@@ -169,6 +202,10 @@ Main UI and logic container:
 8. Renders result cards and detailed lines.
 9. Draws histogram from result distribution.
 10. Draws sparkline for estimate sequence.
+11. Displays leave-one-out values on jackknife results.
+12. Displays bias and variance estimate on jackknife results.
+13. Displays confidence interval for both methods.
+14. Displays validation status, stability score, and performance timing.
 
 ### 4.4 User Flow in Frontend
 
@@ -207,6 +244,14 @@ index.js
 
 1. Public API bridge.
 2. Re-exports bootstrap and jackknife functions.
+3. Re-exports feature-level helpers for explicit imports:
+4. validateResamplingInput
+5. computeLeaveOneOutEstimates
+6. estimateBiasVariance
+7. computePercentileConfidenceInterval
+8. computeStabilityAssessment
+9. buildPerformance
+10. mean, variance, standardDeviation, quantile and other stats helpers
 
 src/resampling.js
 

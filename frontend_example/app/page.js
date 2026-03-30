@@ -603,6 +603,9 @@ export default function Page() {
                   {typeof result.standardError === 'number' ? (
                     <ResultLine label="Jackknife Std. Error" value={formatNumber(result.standardError)} />
                   ) : null}
+                  {typeof result.varianceEstimate === 'number' ? (
+                    <ResultLine label="Jackknife Variance" value={formatNumber(result.varianceEstimate)} />
+                  ) : null}
                   {typeof result.bias === 'number' ? (
                     <ResultLine label="Bias" value={formatNumber(result.bias)} />
                   ) : null}
@@ -618,10 +621,53 @@ export default function Page() {
                     value={`[${formatNumber(result.confidenceInterval.lower)}, ${formatNumber(result.confidenceInterval.upper)}]`}
                   />
 
+                  {result.validation ? (
+                    <ResultLine
+                      label="Validation"
+                      value={result.validation.isValid ? 'Passed' : 'Failed'}
+                    />
+                  ) : null}
+
+                  {result.stability ? (
+                    <ResultLine
+                      label="Stability Score"
+                      value={`${formatNumber(result.stability.score)} (${result.stability.level})`}
+                    />
+                  ) : null}
+
+                  {result.performance ? (
+                    <ResultLine
+                      label="Compute Time (ms)"
+                      value={String(result.performance.elapsedMs)}
+                    />
+                  ) : null}
+
                   <p className="mt-4 rounded border border-green-500 bg-white px-3 py-2 text-xs font-semibold text-green-700">
                     Computation completed successfully.
                   </p>
                 </div>
+
+                {Array.isArray(result.leaveOneOutEstimates) ? (
+                  <div className="rounded-lg border border-neutral-300 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                      Leave-one-out Estimation (first 10)
+                    </p>
+                    <p className="mt-2 text-sm text-neutral-800">
+                      {result.leaveOneOutEstimates.slice(0, 10).map((value) => formatNumber(value)).join(', ')}
+                    </p>
+                  </div>
+                ) : null}
+
+                {result.featureImportsUsed ? (
+                  <div className="rounded-lg border border-neutral-300 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                      Toolkit Feature Imports Used
+                    </p>
+                    <p className="mt-2 text-sm text-neutral-800">
+                      {Object.keys(result.featureImportsUsed).filter((key) => result.featureImportsUsed[key]).join(', ')}
+                    </p>
+                  </div>
+                ) : null}
 
                 <Histogram
                   values={chartValues}
